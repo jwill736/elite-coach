@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Build Your Plan · Elite Coach OS</title>
+<meta name="description" content="Answer a few questions and get a full running plan built around your life: marathon, half, 10K, 5K, or just running consistently.">
+<meta property="og:title" content="Build your running plan · Elite Coach OS">
+<meta property="og:description" content="A plan built around your days, your race and how hard you want to push. Free, in your browser.">
+<meta name="theme-color" content="#0E0E10">
+<style>
+  :root {
+    --bg: #0E0E10; --card: #16161A; --card-2: #1C1C22; --line: #2A2A33; --line-hi: #3A3A46;
+    --text: #F2F2F5; --muted: #9A9AA5; --orange: #FF5F1F; --purple: #9147FF; --green: #6FE36B;
+    --amber: #FFD166; --cyan: #4DD6FF; --strava: #FC4C02;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -.3px; }
+  h1 span { background: linear-gradient(135deg, var(--orange), var(--purple)); -webkit-background-clip: text;
+    background-clip: text; -webkit-text-fill-color: transparent; }
+  .lede { color: var(--muted); margin: 0 0 22px; }
+  a { color: #b69cff; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--muted); margin: 0 0 14px; }
+  .q { margin-bottom: 18px; }
+  .q:last-child { margin-bottom: 0; }
+  .ql { display: block; font-weight: 650; margin-bottom: 8px; }
+  .opt { color: var(--muted); font-weight: 400; font-size: 13px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips.stack { flex-direction: column; align-items: stretch; }
+  .chips button { background: var(--card-2); color: var(--text); border: 1px solid var(--line-hi); border-radius: 999px;
+    padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+  .chips.stack button { border-radius: 10px; text-align: left; }
+  .chips button[aria-pressed="true"] { background: var(--purple); border-color: var(--purple); }
+  input, select { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line-hi);
+    border-radius: 10px; padding: 10px 12px; font: inherit; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .row3 label, .row label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 4px; }
+  :focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+  .btn { display: block; width: 100%; text-align: center; background: linear-gradient(135deg, var(--orange), var(--purple));
+    color: #fff; border: 0; border-radius: 12px; padding: 14px 20px; font: inherit; font-weight: 800; cursor: pointer;
+    text-decoration: none; }
+  .btn.ghost { background: none; border: 1px solid var(--line-hi); font-weight: 600; margin-top: 10px; }
+  .btn.strava { background: var(--strava); }
+  .hidden { display: none !important; }
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat { background: var(--card-2); border-radius: 10px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 22px; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .warn { border-color: var(--amber); color: var(--amber); font-size: 14px; }
+  .weeks { display: flex; gap: 4px; align-items: flex-end; height: 140px; overflow-x: auto; padding-bottom: 4px;
+    scrollbar-width: thin; scrollbar-color: var(--line-hi) transparent; }
+  .wk { flex: 0 0 14px; border-radius: 3px 3px 0 0; background: var(--purple); }
+  .wk.cutback, .wk.recovery { background: var(--cyan); }
+  .wk.taper { background: var(--amber); }
+  .wk.race { background: var(--orange); }
+  .wk.tune-up { background: var(--green); }
+  .wk.return { background: #7A7A88; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td { padding: 7px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  td:first-child { color: var(--muted); width: 56px; text-transform: capitalize; }
+  .wk-title { font-weight: 700; margin: 4px 0 2px; }
+  .wk-focus { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+  ul.more { margin: 0 0 14px; padding-left: 20px; color: var(--muted); }
+  ul.more li { margin: 4px 0; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 28px; text-align: center; }
+  @media (max-width: 480px) { .row3 { grid-template-columns: 1fr; } h1 { font-size: 22px; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Build <span>your</span> running plan</h1>
+  <p class="lede">A plan built around your days, your race, and how hard you want to push. Free, and it runs in your browser: nothing you type leaves this page.</p>
+
+  <form id="form" novalidate>
+    <section class="card" aria-labelledby="h-fit">
+      <h2 id="h-fit">Your running right now</h2>
+      <div class="row3">
+        <div><label for="f-cur">Avg miles/week, last month</label><input id="f-cur" type="number" min="0" max="150" step="0.5" value="10" inputmode="decimal"></div>
+        <div><label for="f-best">Best week ever (mi)</label><input id="f-best" type="number" min="0" max="200" step="0.5" value="20" inputmode="decimal"></div>
+        <div><label for="f-gap">Days since last run</label><input id="f-gap" type="number" min="0" max="999" value="3" inputmode="numeric"></div>
+      </div>
+    </section>
+    <section class="card" aria-labelledby="h-q">
+      <h2 id="h-q">About you</h2>
+      <div class="q"><span class="ql" id="l-goal">What are you training for?</span><div id="c-goal"></div></div>
+      <div class="q race"><label class="ql" for="i-date">Race date</label><input id="i-date" type="date"></div>
+      <div class="q race"><label class="ql" for="i-name">Race name <span class="opt">(optional)</span></label><input id="i-name" type="text" maxlength="80"></div>
+      <div class="q"><span class="ql" id="l-days">Which days can you run? <span class="opt">(3 to 6)</span></span><div id="c-days"></div></div>
+      <div class="q"><span class="ql" id="l-long">Best day for your long run</span><div id="c-long"></div></div>
+      <div class="q"><span class="ql">Regular group run or club night? <span class="opt">(optional)</span></span>
+        <div class="row">
+          <div><label for="g-name">Name</label><input id="g-name" type="text" placeholder="e.g. Run Club" maxlength="40"></div>
+          <div><label for="g-day">Day</label><select id="g-day"><option value="">None</option></select></div>
+        </div>
+      </div>
+      <div class="q"><span class="ql" id="l-style">How hard should the plan push?</span><div id="c-style"></div></div>
+    </section>
+    <button class="btn" type="submit">Show my plan</button>
+  </form>
+
+  <div id="result" class="hidden" aria-live="polite">
+    <section class="card" aria-labelledby="h-sum"><h2 id="h-sum">Your plan</h2><div class="stats" id="stats"></div></section>
+    <div id="warnings"></div>
+    <section class="card" aria-labelledby="h-road">
+      <h2 id="h-road">The road, week by week</h2>
+      <div class="weeks" id="weeks" role="img" aria-label="Weekly miles for every week of the plan"></div>
+      <div class="legend">
+        <span><i style="background:#7A7A88"></i>Comeback</span><span><i style="background:var(--purple)"></i>Build</span>
+        <span><i style="background:var(--cyan)"></i>Cutback</span><span><i style="background:var(--green)"></i>Tune-up</span>
+        <span><i style="background:var(--amber)"></i>Taper</span><span><i style="background:var(--orange)"></i>Race</span>
+      </div>
+    </section>
+    <section class="card" aria-labelledby="h-week"><h2 id="h-week">Week 1</h2><div id="week1"></div></section>
+    <section class="card" aria-labelledby="h-peak"><h2 id="h-peak">Biggest week</h2><div id="peakweek"></div></section>
+    <section class="card" aria-labelledby="h-more">
+      <h2 id="h-more">Want this as your actual coach?</h2>
+      <p style="margin-top:0">This is the starting plan. The full coach is what I use myself, and it keeps adjusting:</p>
+      <ul class="more">
+        <li>Every Monday it reviews your week: done moves you up, half repeats, missed steps back.</li>
+        <li>A 10-second morning check-in turns a bad night's sleep into an easy day.</li>
+        <li>A note after every run: how it went and what to do next.</li>
+      </ul>
+      <a class="btn strava" href="https://www.strava.com/athletes/94483044" rel="noopener">Follow the build on Strava</a>
+    </section>
+    <button class="btn ghost" type="button" id="again">Change answers</button>
+  </div>
+
+  <footer>
+    General training guidance, not medical advice. If you have a health condition or an injury, check with a professional first.<br>
+    <a href="./">Elite Coach OS</a> · <a href="privacy.html">Privacy</a>
+  </footer>
+</main>
+
+<script src="planner.js"></script>
+<script>
+(() => {
+  const P = window.Planner, DAYS = P.DAYS;
+  const DAYNAME = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
+  const answers = { goal: "half", run_days: ["mon", "tue", "thu", "sat"], long_day: "sat", style: "balanced" };
+  const el = (t, attrs, text) => { const e = document.createElement(t);
+    Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (text != null) e.textContent = text; return e; };
+
+  function chips(hostId, key, options, multi, labelId) {
+    const box = el("div", { class: "chips" + (options.some(([, l]) => l.length > 30) ? " stack" : ""), role: "group",
+                            "aria-labelledby": labelId });
+    const sync = () => box.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed",
+      String(multi ? answers[key].includes(b.dataset.v) : answers[key] === b.dataset.v)));
+    options.forEach(([v, label]) => {
+      const b = el("button", { type: "button", "data-v": v }, label);
+      b.addEventListener("click", () => {
+        if (multi) { const s = new Set(answers[key]); s.has(v) ? s.delete(v) : s.add(v); answers[key] = DAYS.filter((d) => s.has(d)); }
+        else answers[key] = v;
+        sync(); toggleRace();
+      });
+      box.append(b);
+    });
+    sync();
+    document.getElementById(hostId).append(box);
+  }
+  chips("c-goal", "goal", [["marathon", "Marathon"], ["half", "Half marathon"], ["10k", "10K"], ["5k", "5K"],
+                           ["consistency", "Just run consistently"]], false, "l-goal");
+  chips("c-days", "run_days", DAYS.map((d) => [d, DAYNAME[d]]), true, "l-days");
+  chips("c-long", "long_day", DAYS.map((d) => [d, DAYNAME[d]]), false, "l-long");
+  chips("c-style", "style", [["gentle", "Gentle: slow and steady, fewest injuries"],
+                             ["balanced", "Balanced: the usual advice"],
+                             ["aggressive", "Aggressive: push me, I know the risk"]], false, "l-style");
+  const gDay = document.getElementById("g-day");
+  DAYS.forEach((d) => gDay.append(el("option", { value: d }, DAYNAME[d])));
+
+  function toggleRace() {
+    document.querySelectorAll(".race").forEach((q) => q.classList.toggle("hidden", answers.goal === "consistency"));
+  }
+  toggleRace();
+  const d = new Date(); d.setDate(d.getDate() + 7 * 20);
+  document.getElementById("i-date").value = d.toLocaleDateString("en-CA");
+
+  const stat = (big, small) => { const s = el("div", { class: "stat" }); s.append(el("b", {}, big), el("span", {}, small)); return s; };
+  function weekTable(host, w) {
+    host.replaceChildren(el("div", { class: "wk-title" }, `${w.label} · ${w.target_miles} mi · ${w.week_start}`),
+                         el("div", { class: "wk-focus" }, w.focus));
+    const t = el("table");
+    DAYS.forEach((day) => { const tr = el("tr"); tr.append(el("td", {}, day), el("td", {}, w.sessions[day].label)); t.append(tr); });
+    host.append(t);
+  }
+
+  document.getElementById("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const raw = { ...answers, race_date: document.getElementById("i-date").value,
+                  race_name: document.getElementById("i-name").value,
+                  group_run: gDay.value ? { day: gDay.value, name: document.getElementById("g-name").value || "Group run", quality: true } : null };
+    const gap = document.getElementById("f-gap").value;
+    const fitness = { current_weekly: Math.min(150, Math.max(0, +document.getElementById("f-cur").value || 0)),
+                      best_week: Math.min(200, Math.max(0, +document.getElementById("f-best").value || 0)),
+                      days_since_last_run: gap === "" ? null : Math.max(0, +gap) };
+    const out = P.generate(P.validate(raw), fitness, new Date().toLocaleDateString("en-CA"));
+    const s = out.summary, weeks = out.weeks;
+    document.getElementById("stats").replaceChildren(
+      stat(`${s.start} → ${s.peak} mi`, "weekly miles, start to peak"),
+      stat(`${s.longest_run} mi`, "longest run"),
+      stat(`${s.weeks} weeks`, s.race_date ? `to race day, ${s.race_date}` : "to a steady habit"),
+      stat(s.comeback ? "Comeback" : "Building", s.comeback ? "starting well under your best" : "from what you run now"));
+    document.getElementById("warnings").replaceChildren(...out.warnings.map((w) => el("div", { class: "card warn", role: "note" }, "⚠️ " + w)));
+    const max = Math.max(...weeks.map((w) => w.target_miles), 1);
+    document.getElementById("weeks").replaceChildren(...weeks.map((w) => {
+      const kind = w.phase.startsWith("race week") ? "race" : w.phase;
+      const b = el("div", { class: "wk " + kind, title: `${w.week_start}: ${w.target_miles} mi · ${w.phase}` });
+      b.style.height = Math.max(6, (w.target_miles / max) * 130) + "px";
+      return b;
+    }));
+    weekTable(document.getElementById("week1"), weeks[0]);
+    const peak = weeks.reduce((a, w) => (w.target_miles > a.target_miles && !w.phase.startsWith("race week") ? w : a), weeks[0]);
+    weekTable(document.getElementById("peakweek"), peak);
+    document.getElementById("form").classList.add("hidden");
+    document.getElementById("result").classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  document.getElementById("again").addEventListener("click", () => {
+    document.getElementById("result").classList.add("hidden");
+    document.getElementById("form").classList.remove("hidden");
+  });
+})();
+</script>
+</body>
+</html>
